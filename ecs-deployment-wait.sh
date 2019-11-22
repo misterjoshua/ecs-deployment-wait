@@ -5,7 +5,7 @@ function describeService() {
     ECS_CLUSTER=${ECS_CLUSTER:-cluster}
     ECS_SERVICE=${ECS_SERVICE:-service}
 
-    [ ! -Z "$AWS_PROFILE" ] && AWS_PROFILE_ARG="--profile $AWS_PROFILE" || unset AWS_PROFILE
+    [ ! -z "$AWS_PROFILE" ] && AWS_PROFILE_ARG="--profile $AWS_PROFILE" || unset AWS_PROFILE
     aws ecs describe-services $AWS_PROFILE_ARG --cluster $ECS_CLUSTER --services $ECS_SERVICE
 }
 
@@ -24,14 +24,12 @@ function parseNumTotal() {
 function waitForDeployment() {
     echo "Started: $(date)"
     
-    TIMEOUT=${TIMEOUTL-300}
+    TIMEOUT=${TIMEOUT:-300}
     for (( COUNT=0; COUNT<TIMEOUT; COUNT++)); do
         SERVICE=$(describeService)
         NUM_PRIMARY=$(parseNumPrimary <<<$SERVICE)
         NUM_ACTIVE=$(parseNumActive <<<$SERVICE)
         NUM_TOTAL=$(parseNumTotal <<<$SERVICE)
-
-        
         
         if (( NUM_PRIMARY > 0 && NUM_ACTIVE == 0 )); then
             echo "Deployment has finished."
