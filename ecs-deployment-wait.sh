@@ -1,12 +1,11 @@
 #!/bin/bash -e
 
 function describeService() {
-    AWS_PROFILE=${AWS_PROFILE:-}
     ECS_CLUSTER=${ECS_CLUSTER:-cluster}
     ECS_SERVICE=${ECS_SERVICE:-service}
 
-    [ ! -z "$AWS_PROFILE" ] && AWS_PROFILE_ARG="--profile $AWS_PROFILE" || unset AWS_PROFILE
-    aws ecs describe-services $AWS_PROFILE_ARG --cluster $ECS_CLUSTER --services $ECS_SERVICE
+    [ ! -z "$AWS_PROFILE" ] && AWS_PROFILE_ARG="--profile $AWS_PROFILE"
+    aws ecs describe-services $AWS_PROFILE_ARG --cluster $ECS_CLUSTER --services $ECS_SERVICE || exit 1
 }
 
 function parseNumPrimary() {
