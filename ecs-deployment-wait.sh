@@ -1,11 +1,12 @@
 #!/bin/bash -e
 
 function describeService() {
-    AWS_PROFILE=${AWS_PROFILE:-default}
+    AWS_PROFILE=${AWS_PROFILE:-}
     ECS_CLUSTER=${ECS_CLUSTER:-cluster}
     ECS_SERVICE=${ECS_SERVICE:-service}
-    
-    aws ecs describe-services --profile $AWS_PROFILE --cluster $ECS_CLUSTER --services $ECS_SERVICE
+
+    [ ! -Z "$AWS_PROFILE" ] && AWS_PROFILE_ARG="--profile $AWS_PROFILE" || unset AWS_PROFILE
+    aws ecs describe-services $AWS_PROFILE_ARG --cluster $ECS_CLUSTER --services $ECS_SERVICE
 }
 
 function parseNumPrimary() {
@@ -29,6 +30,8 @@ function waitForDeployment() {
         NUM_PRIMARY=$(parseNumPrimary <<<$SERVICE)
         NUM_ACTIVE=$(parseNumActive <<<$SERVICE)
         NUM_TOTAL=$(parseNumTotal <<<$SERVICE)
+
+        
         
         if (( NUM_PRIMARY > 0 && NUM_ACTIVE == 0 )); then
             echo "Deployment has finished."
