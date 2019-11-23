@@ -16,6 +16,17 @@ ECS_SERVICE=servicename \
 ./ecs-deployment-wait.sh
 ```
 
+Inject AWS credentials and a region:
+
+```
+AWS_ACCESS_KEY_ID=YOUR_KEY_ID_HERE \
+AWS_SECRET_ACCESS_KEY=YOUR_KEY_HERE_DONT_PUT_IT_IN_GIT \
+AWS_DEFAULT_REGION=aws-region-1 \
+ECS_CLUSTER=clustername \
+ECS_SERVICE=servicename \
+./ecs-deployment-wait.sh
+```
+
 Run the script with Bash Script as a Service:
 
 ```
