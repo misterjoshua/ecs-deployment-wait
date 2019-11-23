@@ -39,21 +39,21 @@ function log() {
 
 function waitForDeployment() {
     TIMEOUT_SECONDS=${TIMEOUT:-300}
-    
+
     log "Started: Time=$(date), Timeout=$TIMEOUT_SECONDS seconds"
-    
+
     START_TIME=$(now)
     while true; do
         SERVICE=$(describeService)
         (( $? == 0 )) || die "Couldn't describe the service"
-        
+
         NUM_PRIMARY=$(parseNumPrimary <<<$SERVICE)
         NUM_ACTIVE=$(parseNumActive <<<$SERVICE)
         NUM_TOTAL=$(parseNumTotal <<<$SERVICE)
         let "ELAPSED_SECONDS=$(now) - START_TIME"
 
         log "Deployment task counts: Primary=$NUM_PRIMARY, Active=$NUM_ACTIVE, Total=$NUM_TOTAL; Elapsed: $ELAPSED_SECONDS seconds"
-        
+
         if (( NUM_PRIMARY > 0 && NUM_ACTIVE == 0 )); then
             # Deployment finished
             return 0
@@ -88,7 +88,7 @@ function selftest() {
     log "Testing that waitForDeploy can timeout"
     function parseNumActive() { echo 2; }
     function parseNumPrimary() { echo 0; }
-    
+
     TIMEOUT=2
     TOLERANCE_SECONDS=2
     START=$(now)
@@ -98,7 +98,7 @@ function selftest() {
     #
 
     log "Testing that waiting detects a completed ECS cutover"
-    
+
     # This is the simulation:
     # Start: 0 primary, 2 active
     # After primary delay: 2 primary, 2 active
@@ -107,11 +107,11 @@ function selftest() {
     function parseNumPrimary() { (( $(now) > START+PRIMARY_DELAY_SECONDS )) && echo 2 || echo 0; }
     CUTOVER_DELAY_SECONDS=5
     function parseNumActive() { (( $(now) < START+CUTOVER_DELAY_SECONDS )) && echo 2 || echo 0; }
-    
+
     START=$(now)
     TIMEOUT=10 waitForDeployment || die "Wait for deployment shouldn't have failed in cutover simulation"
     END=$(now)
-    
+
     TOLERANCE_SECONDS=2
     (( END <= START+CUTOVER_DELAY_SECONDS+TOLERANCE_SECONDS )) || die "waitForDeploy waited longer than the time."
     (( END >= START+CUTOVER_DELAY_SECONDS )) || die "waitForDeploy didn't wait for the cutover"
