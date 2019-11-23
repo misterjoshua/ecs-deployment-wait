@@ -44,7 +44,9 @@ function waitForDeployment() {
     
     START_TIME=$(now)
     while true; do
-        describeService | read SERVICE || die "Couldn't describe the service"
+        SERVICE=$(describeService)
+        (( $? == 0 )) || die "Couldn't describe the service"
+        
         NUM_PRIMARY=$(parseNumPrimary <<<$SERVICE)
         NUM_ACTIVE=$(parseNumActive <<<$SERVICE)
         NUM_TOTAL=$(parseNumTotal <<<$SERVICE)
