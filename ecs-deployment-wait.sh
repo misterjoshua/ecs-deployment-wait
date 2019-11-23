@@ -9,8 +9,7 @@ function describeService() {
     ECS_CLUSTER=${ECS_CLUSTER:-cluster}
     ECS_SERVICE=${ECS_SERVICE:-service}
 
-    [ ! -z "$AWS_PROFILE" ] && AWS_PROFILE_ARG="--profile $AWS_PROFILE"
-    aws ecs describe-services $AWS_PROFILE_ARG --cluster $ECS_CLUSTER --services $ECS_SERVICE || exit 1
+    aws ecs describe-services $AWS_PROFILE_ARG --cluster $ECS_CLUSTER --services $ECS_SERVICE
 }
 
 function parseNumPrimary() {
@@ -39,13 +38,13 @@ function log() {
 }
 
 function waitForDeployment() {
-    TIMEOUT_SECONDS=${TIMEOUT:-10}
+    TIMEOUT_SECONDS=${TIMEOUT:-300}
     
     log "Started: Time=$(date), Timeout=$TIMEOUT_SECONDS seconds"
     
     START_TIME=$(now)
     while true; do
-        SERVICE=$(describeService)
+        describeService | read SERVICE || die "Couldn't describe the service"
         NUM_PRIMARY=$(parseNumPrimary <<<$SERVICE)
         NUM_ACTIVE=$(parseNumActive <<<$SERVICE)
         NUM_TOTAL=$(parseNumTotal <<<$SERVICE)
