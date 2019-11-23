@@ -8,10 +8,20 @@ This script uses the `aws` command and `jq` to poll ECS services for the deploym
 
 ## Example usage
 
+Run the script locally with the AWS profile:
+
 ```
 ECS_CLUSTER=clustername \
 ECS_SERVICE=servicename \
 ./ecs-deployment-wait.sh
+```
+
+Run the script with Bash Script as a Service:
+
+```
+ECS_CLUSTER=clustername \
+ECS_SERVICE=servicename \
+bash <(https://raw.githubusercontent.com/misterjoshua/ecs-deployment-wait/master/ecs-deployment-wait.sh)
 ```
 
 ## Configuration
