@@ -1,0 +1,4 @@
+language: generic
+script:
+- set -e
+- ./ecs-deployment-wait.sh selftest
