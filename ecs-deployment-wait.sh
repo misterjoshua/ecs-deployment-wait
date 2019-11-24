@@ -107,7 +107,7 @@ function selftest() {
     TIMEOUT=2
     TOLERANCE_SECONDS=2
     START=$(now)
-    TIMEOUT=$TIMEOUT waitForDeployment && die "Timeout didn't occur" || log "Timeout test succeeded"
+    TIMEOUT=$TIMEOUT INTERVAL=1 waitForDeployment && die "Timeout didn't occur" || log "Timeout test succeeded"
     END=$(now)
 
     #
@@ -124,12 +124,13 @@ function selftest() {
     function parseNumActive() { (( $(now) < START+CUTOVER_DELAY_SECONDS )) && echo 2 || echo 0; }
 
     START=$(now)
-    TIMEOUT=10 waitForDeployment || die "Wait for deployment shouldn't have failed in cutover simulation"
+    TIMEOUT=10 INTERVAL=1 waitForDeployment || die "Wait for deployment shouldn't have failed in cutover simulation"
     END=$(now)
 
     TOLERANCE_SECONDS=2
     (( END <= START+CUTOVER_DELAY_SECONDS+TOLERANCE_SECONDS )) || die "waitForDeploy waited longer than the time."
     (( END >= START+CUTOVER_DELAY_SECONDS )) || die "waitForDeploy didn't wait for the cutover"
+    log "Cutover test succeeded."
 
     #
 
