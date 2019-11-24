@@ -9,7 +9,13 @@ function describeService() {
     ECS_CLUSTER=${ECS_CLUSTER:-cluster}
     ECS_SERVICE=${ECS_SERVICE:-service}
 
-    aws ecs describe-services $AWS_PROFILE_ARG --cluster $ECS_CLUSTER --services $ECS_SERVICE
+    SERVICE=$(aws ecs describe-services $AWS_PROFILE_ARG --cluster $ECS_CLUSTER --services $ECS_SERVICE)
+    parseIsValid <<<$SERVICE || return 1
+    cat <<<$SERVICE
+}
+
+function parseIsValid() {
+    [ "$(jq '.services | length > 0')" = "true" ]
 }
 
 function parseNumPrimary() {
@@ -22,6 +28,10 @@ function parseNumActive() {
 
 function parseNumTotal() {
     jq '[ .services[].deployments[] | .runningCount ] | add // 0' --raw-output
+}
+
+function parseIsStable() {
+    jq '([.services[].deployments[]] | length == 1) and ([.services[].deployments[] | select(.runningCount == .desiredCount)] | length == 1)'
 }
 
 function now() {
@@ -38,9 +48,10 @@ function log() {
 }
 
 function waitForDeployment() {
-    TIMEOUT_SECONDS=${TIMEOUT:-300}
+    TIMEOUT=${TIMEOUT:-300}
+    INTERVAL=${INTERVAL:-5}
 
-    log "Started: Time=$(date), Timeout=$TIMEOUT_SECONDS seconds"
+    log "Started: Time=$(date), Timeout=$TIMEOUT seconds"
 
     START_TIME=$(now)
     while true; do
@@ -50,20 +61,20 @@ function waitForDeployment() {
         NUM_PRIMARY=$(parseNumPrimary <<<$SERVICE)
         NUM_ACTIVE=$(parseNumActive <<<$SERVICE)
         NUM_TOTAL=$(parseNumTotal <<<$SERVICE)
-        let "ELAPSED_SECONDS=$(now) - START_TIME"
+        let "ELAPSED=$(now) - START_TIME"
 
-        log "Deployment task counts: Primary=$NUM_PRIMARY, Active=$NUM_ACTIVE, Total=$NUM_TOTAL; Elapsed: $ELAPSED_SECONDS seconds"
+        log "Deployment task counts: Primary=$NUM_PRIMARY, Active=$NUM_ACTIVE, Total=$NUM_TOTAL; Elapsed: $ELAPSED seconds"
 
-        if (( NUM_PRIMARY > 0 && NUM_ACTIVE == 0 )); then
+        if [ "$(parseIsStable <<<$SERVICE)" = "true" ]; then
             # Deployment finished
             return 0
-        elif (( ELAPSED_SECONDS > TIMEOUT_SECONDS )); then
-            log "Timeout $TIMEOUT_SECONDS seconds (actual: $ELAPSED_SECONDS)"
+        elif (( ELAPSED > TIMEOUT )); then
+            log "Timeout $TIMEOUT seconds (actual: $ELAPSED)"
             return 1
         else
             # Deployment not done yet. Check again in a bit.
             let "COUNT++"
-            sleep 1
+            sleep $INTERVAL
         fi
     done
 }
@@ -76,11 +87,15 @@ function selftest() {
     ORIG_PARSENUMACTIVE=$(declare -f parseNumActive)
     ORIG_PARSENUMPRIMARY=$(declare -f parseNumPrimary)
     ORIG_PARSENUMTOTAL=$(declare -f parseNumTotal)
+    ORIG_PARSEISSTABLE=$(declare -f parseIsStable)
 
     function describeService() { echo ""; }
     function parseNumTotal() {
         let "OUT=$(parseNumActive) + $(parseNumPrimary)"
         echo $OUT
+    }
+    function parseIsStable() {
+        (( $(parseNumPrimary) == 2 && $(parseNumActive) == 0 )) && echo "true" || echo "false"
     }
 
     #
@@ -105,7 +120,7 @@ function selftest() {
     # After cutover delay: 2 primary, 0 active (appropriate time to exit)
     PRIMARY_DELAY_SECONDS=3
     function parseNumPrimary() { (( $(now) > START+PRIMARY_DELAY_SECONDS )) && echo 2 || echo 0; }
-    CUTOVER_DELAY_SECONDS=5
+    CUTOVER_DELAY_SECONDS=7
     function parseNumActive() { (( $(now) < START+CUTOVER_DELAY_SECONDS )) && echo 2 || echo 0; }
 
     START=$(now)
@@ -123,6 +138,7 @@ function selftest() {
     eval "$ORIG_PARSENUMACTIVE"
     eval "$ORIG_PARSENUMPRIMARY"
     eval "$ORIG_PARSENUMTOTAL"
+    eval "$ORIG_PARSEISSTABLE"
 }
 
 ###############
