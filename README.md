@@ -1,10 +1,12 @@
 [![Build Status](https://travis-ci.org/misterjoshua/ecs-deployment-wait.svg?branch=master)](https://travis-ci.org/misterjoshua/ecs-deployment-wait)
 
-# ECS Deployment Waiter Bash Script
+# ECS Deployment Waiter Script
 
-This bash script waits for an Amazon ECS service deployment to complete. You can use this to cause a CD pipeline to wait until deployment finishes before ending a pipeline step.
+This script waits for an Amazon ECS service to [become stable](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html) after a deployment, such as in a CD pipeline deployment step. The functionality of this script is similar to `aws ecs wait services-stable`, except that it provides a configurable polling interval, configurable timeout, and verbose output.
 
-This script uses the `aws` command and `jq` to poll ECS services for the deployment to complete. This script considers a deployment done when there are primary tasks runnung (the new tasks) and no active tasks (the old tasks). The script exits with an error code when a timeout occurs.
+Like `aws ecs wait services-stable`, this script considers a service stable when there is one service deployment and that deployment's running count of tasks equals its desired count. The script exits with an error code when a timeout occurs.
+
+> Note: This script uses the `aws` and `jq` commands, expecting them in the path.
 
 ## Example usage
 
@@ -44,6 +46,7 @@ Configuration is done through environment variables passed to this script.
 | `ECS_CLUSTER` | The name of the ECS cluster
 | `ECS_SERVICE` | The name of the ECS service to monitor.
 | `TIMEOUT` | How many seconds the script will wait before timing out. (Default: 300 seconds)
+| `INTERVAL` | The polling interval in seconds. (Default: 5 seconds)
 
 The AWS CLI in turn accepts the following environment variables:
 
