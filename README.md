@@ -10,12 +10,21 @@ Like `aws ecs wait services-stable`, this script considers a service stable when
 
 ## Example usage
 
-Run the script locally with the AWS profile:
+Run the script locally with the default AWS profile, a one second interval, and ten second timeout:
 
 ```
-ECS_CLUSTER=clustername \
-ECS_SERVICE=servicename \
+$ ECS_CLUSTER=clustername ECS_SERVICE=servicename INTERVAL=1 TIMEOUT=10 \
 ./ecs-deployment-wait.sh
+Started: Time=Sat Nov 23 17:44:29 MST 2019, Timeout=10 seconds
+Deployment task counts: Primary=0, Active=2, Total=2; Elapsed: 0 seconds
+Deployment task counts: Primary=0, Active=2, Total=2; Elapsed: 1 seconds
+Deployment task counts: Primary=0, Active=2, Total=2; Elapsed: 2 seconds
+Deployment task counts: Primary=0, Active=2, Total=2; Elapsed: 3 seconds
+Deployment task counts: Primary=2, Active=2, Total=4; Elapsed: 4 seconds
+Deployment task counts: Primary=2, Active=2, Total=4; Elapsed: 5 seconds
+Deployment task counts: Primary=2, Active=2, Total=4; Elapsed: 6 seconds
+Deployment task counts: Primary=2, Active=0, Total=2; Elapsed: 7 seconds
+Deployment finished
 ```
 
 Inject AWS credentials and a region:
@@ -27,6 +36,7 @@ AWS_DEFAULT_REGION=aws-region-1 \
 ECS_CLUSTER=clustername \
 ECS_SERVICE=servicename \
 ./ecs-deployment-wait.sh
+...
 ```
 
 Run the script with Bash Script as a Service:
