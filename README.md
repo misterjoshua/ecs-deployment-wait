@@ -36,6 +36,7 @@ AWS_DEFAULT_REGION=aws-region-1 \
 ECS_CLUSTER=clustername \
 ECS_SERVICE=servicename \
 ./ecs-deployment-wait.sh
+
 ...
 ```
 
@@ -45,6 +46,8 @@ Run the script with Bash Script as a Service:
 ECS_CLUSTER=clustername \
 ECS_SERVICE=servicename \
 bash <(https://raw.githubusercontent.com/misterjoshua/ecs-deployment-wait/master/ecs-deployment-wait.sh)
+
+...
 ```
 
 ## Configuration
